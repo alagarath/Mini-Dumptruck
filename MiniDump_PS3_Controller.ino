@@ -22,6 +22,7 @@ int lightSwitchTime = 0;
 int adjustedSteeringValue = 86;
 int auxServoValue = 90;
 bool lightsOn = false;
+int steeringTrim = 0;
 
 
 void notify() {
@@ -49,12 +50,12 @@ void notify() {
 
 //---------------- Analog stick value events ---------------
 if (abs(Ps3.event.analog_changed.stick.lx) + abs(Ps3.event.analog_changed.stick.ly) > 2) {
-  Serial.print("Moved the left stick:");
-  Serial.print(" x=");
-  Serial.print(Ps3.data.analog.stick.lx, DEC);
-  Serial.print(" y=");
-  Serial.print(Ps3.data.analog.stick.ly, DEC);
-  Serial.println();
+  // Serial.print("Moved the left stick:");
+  // Serial.print(" x=");
+  // Serial.print(Ps3.data.analog.stick.lx, DEC);
+  // Serial.print(" y=");
+  // Serial.print(Ps3.data.analog.stick.ly, DEC);
+  // Serial.println();
   int LYValue = Ps3.data.analog.stick.ly;
   int adjustedThrottleValue = LYValue * 2;
   moveMotor(leftMotor0, leftMotor1, adjustedThrottleValue);
@@ -62,17 +63,34 @@ if (abs(Ps3.event.analog_changed.stick.lx) + abs(Ps3.event.analog_changed.stick.
 }
 
 if (abs(Ps3.event.analog_changed.stick.rx) + abs(Ps3.event.analog_changed.stick.ry) > 2) {
-  Serial.print("Moved the right stick:");
-  Serial.print(" x=");
-  Serial.print(Ps3.data.analog.stick.rx, DEC);
-  Serial.print(" y=");
-  Serial.print(Ps3.data.analog.stick.ry, DEC);
-  Serial.println();
+  // Serial.print("Moved the right stick:");
+  // Serial.print(" x=");
+  // Serial.print(Ps3.data.analog.stick.rx, DEC);
+  // Serial.print(" y=");
+  // Serial.print(Ps3.data.analog.stick.ry, DEC);
+  // Serial.println();
   int RXValue = (Ps3.data.analog.stick.rx);
 
   adjustedSteeringValue = 90 - (RXValue / 3);
-  steeringServo.write(adjustedSteeringValue);
+  steeringServo.write(adjustedSteeringValue + steeringTrim);
 }
+
+//------------------------shoulder buttons events ----------------
+if (Ps3.event.button_down.l1) {
+  if (steeringTrim < 20) {
+    steeringTrim = steeringTrim + 2;
+    steeringServo.write(adjustedSteeringValue + steeringTrim);
+    delay(50);
+  }
+}
+if (Ps3.event.button_down.r1) {
+  if (steeringTrim > -20) {
+    steeringTrim = steeringTrim - 2;
+    steeringServo.write(adjustedSteeringValue + steeringTrim);
+    delay(50);
+  }
+}
+
 if (Ps3.event.button_down.r3) {
   if ((millis() - lightSwitchTime) > 200) {
     if (lightsOn) {
